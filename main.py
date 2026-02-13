@@ -3,16 +3,47 @@ from models.schemas import InterviewSetup, EvaluationRequest, InterviewResult
 from services.groq_service import generate_question, evaluate_answer
 from services.speech_service import speech_to_text
 from utils.scoring import calculate_percentage, grade_from_percentage
+
+
+from fastapi.middleware.cors import CORSMiddleware
+from routes import interview
+import re
+
+
 import uuid
 
+
 app = FastAPI(title="AI Interview Backend")
+app.include_router(interview.router)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # React app
+    allow_credentials=True,
+    allow_methods=["*"],  # GET, POST, OPTIONS, etc.
+    allow_headers=["*"],
+)
+
+
+
 
 scores_store = [] 
+
+def extract_score_from_text(text: str) -> int:
+    """
+    Extracts score like '8/10' from Groq feedback
+    """
+    match = re.search(r'(\d+)\s*/\s*10', text)
+    if match:
+        return int(match.group(1))
+    return 0
+
 question_store = {}  # temporarily holds 3 questions
 current_index = {}    # tracks which question we are on
 
+
 @app.post("/interview/setup")
 def interview_setup(data: InterviewSetup):
+    print("insideeee")
     try:
         questions = generate_question(
             role=data.role,
@@ -22,6 +53,10 @@ def interview_setup(data: InterviewSetup):
             target_company=data.target_company,
             interview_type=data.interview_type
         )
+
+        print("GENERATED QUESTION:", question)
+        return {"question": question}
+
 
         # Generate a simple session ID (you can later replace with real user ID)
         session_id = str(uuid.uuid4())
@@ -41,7 +76,9 @@ def interview_setup(data: InterviewSetup):
             "question": question_store[session_id][0]
         }
 
+
     except Exception as e:
+        print("ufffff")
         print("ERROR:", str(e))
         return {"error": str(e)}
 
@@ -75,7 +112,17 @@ def evaluate(data: EvaluationRequest):
     print("TYPE OF RESULT:", type(result))
     print("RESULT VALUE:", result)
 
-    return result
+    # 👇 NEW: score extract karo
+    score = extract_score_from_text(result)
+    scores_store.append(score)
+
+    print("EXTRACTED SCORE:", score)
+    print("SCORES STORE:", scores_store)
+
+    return {
+        "score": score,
+        "feedback": result
+    }
 
 
 @app.get("/interview/result")

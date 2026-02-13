@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-FFMPEG_PATH = r"C:\ffmpeg\ffmpeg-master-latest-win64-gpl-shared\bin\ffmpeg.exe"
+FFMPEG_PATH = r"C:\ffmpeg\ffmpeg-master-latest-win64-gpl-shared\ffmpeg-master-latest-win64-gpl-shared\bin\ffmpeg.exe"
 
 def speech_to_text(audio_bytes: bytes):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".ogg") as f:
