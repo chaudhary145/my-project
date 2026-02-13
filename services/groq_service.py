@@ -6,6 +6,13 @@ import re
 
 load_dotenv()
 client = Groq()  
+load_dotenv()
+
+api_key = os.getenv("GROQ_API_KEY")
+print("🔑 GROQ_API_KEY:", api_key)
+
+if not api_key:
+    raise RuntimeError("GROQ_API_KEY not found in environment")
 
 FORBIDDEN_KEYWORDS = [
     "implement",
@@ -23,11 +30,18 @@ def is_valid_verbal_question(question: str) -> bool:
     return not any(keyword in question_lower for keyword in FORBIDDEN_KEYWORDS)
 
 def _generate_from_llm(prompt: str) -> str:
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return response.choices[0].message.content.strip()
+    try:
+        print("🧠 Sending prompt to Groq...")
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        print("✅ Groq response received")
+        return response.choices[0].message.content.strip()
+
+    except Exception as e:
+        print("❌ GROQ ERROR:", repr(e))
+        raise
 
 
 def generate_question(role, experience, difficulty, tech_skills=None, target_company=None):
