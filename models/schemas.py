@@ -7,7 +7,7 @@ class InterviewSetup(BaseModel):
     difficulty: str
     tech_skills: Optional[List[str]] = None
     target_company: Optional[str] = None
-
+    interview_type: str
 
 class EvaluationRequest(BaseModel):
     question: str
