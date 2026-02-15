@@ -54,8 +54,8 @@ def interview_setup(data: InterviewSetup):
             interview_type=data.interview_type
         )
 
-        print("GENERATED QUESTION:", question)
-        return {"question": question}
+        print("GENERATED QUESTION:", questions)
+        #return {"questions": questions}
 
 
         # Generate a simple session ID (you can later replace with real user ID)
