@@ -8,7 +8,11 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
+<<<<<<< HEAD
 set VIRTUAL_ENV=C:\Users\Bhoom\Desktop\my-project\venv
+=======
+set VIRTUAL_ENV=C:\Users\DIVYA\OneDrive\Desktop\AI Interview\backend\venv
+>>>>>>> 722cd08672dbfb17ef8bda55987aa32f3d8ae8e3
 
 if not defined PROMPT set PROMPT=$P$G
 

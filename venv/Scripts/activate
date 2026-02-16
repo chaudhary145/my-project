@@ -35,7 +35,11 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
+<<<<<<< HEAD
 VIRTUAL_ENV="C:\Users\Bhoom\Desktop\my-project\venv"
+=======
+VIRTUAL_ENV="C:\Users\DIVYA\OneDrive\Desktop\AI Interview\backend\venv"
+>>>>>>> 722cd08672dbfb17ef8bda55987aa32f3d8ae8e3
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
