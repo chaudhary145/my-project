@@ -107,8 +107,19 @@ async def transcribe_audio(audio: UploadFile = File(...)):
 
 @app.post("/interview/evaluate")
 def evaluate(data: EvaluationRequest):
-    result = evaluate_answer(data.question, data.answer)
+    if not data.answer or not data.answer.strip():
+        return {
+            "score": 0,
+            "feedback": "No answer provided."
+        }
+    
+    score, feedback = evaluate_answer(data.question, data.answer)
+    return {
+        "score": score,
+        "feedback": feedback
+    }
 
+<<<<<<< HEAD
     print("TYPE OF RESULT:", type(result))
     print("RESULT VALUE:", result)
 
@@ -123,14 +134,14 @@ def evaluate(data: EvaluationRequest):
         "score": score,
         "feedback": result
     }
+=======
+>>>>>>> 722cd08672dbfb17ef8bda55987aa32f3d8ae8e3
 
 
 @app.get("/interview/result")
 def final_result():
     if not scores_store:
         return {
-            "message": "No evaluations completed yet",
-            "total_questions": 0,
             "percentage": 0,
             "grade": "N/A"
         }
@@ -139,8 +150,6 @@ def final_result():
     grade = grade_from_percentage(percentage)
 
     return {
-        "total_questions": len(scores_store),
-        "total_score": sum(scores_store),
         "percentage": percentage,
         "grade": grade
     }
