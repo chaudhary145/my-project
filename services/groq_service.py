@@ -8,19 +8,13 @@ import time
 
 load_dotenv()
 
-client = Groq()  
-load_dotenv()
-
-api_key = os.getenv("GROQ_API_KEY")
-#print("🔑 GROQ_API_KEY:", api_key)
-
-if not api_key:
-    raise RuntimeError("GROQ_API_KEY not found in environment")
-
-
 client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 ) 
+#if not api_key:
+ #   raise RuntimeError("GROQ_API_KEY not found in environment")
+
+
 
 
 FORBIDDEN_KEYWORDS = [
@@ -41,6 +35,7 @@ def is_valid_verbal_question(question: str) -> bool:
 
 def _generate_from_llm(prompt: str) -> str:
 
+    """
     try:
         print("🧠 Sending prompt to Groq...")
         response = client.chat.completions.create(
@@ -54,14 +49,14 @@ def _generate_from_llm(prompt: str) -> str:
     except Exception as e:
         print("❌ GROQ ERROR:", repr(e))
         raise
-
+"""
     response = client.chat.completions.create(
         model="openai/gpt-oss-120b",
 =======
              model="openai/gpt-oss-120b",
 >>>>>>> 722cd08672dbfb17ef8bda55987aa32f3d8ae8e3
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.9,
+        temperature=0.8,
         top_p=0.95
         )
         print("✅ Groq response received")
