@@ -12,6 +12,7 @@ client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 ) 
 
+
 FORBIDDEN_KEYWORDS = [
     "implement",
     "write code",
@@ -29,13 +30,22 @@ def is_valid_verbal_question(question: str) -> bool:
     return not any(keyword in question_lower for keyword in FORBIDDEN_KEYWORDS)
 
 def _generate_from_llm(prompt: str) -> str:
-    response = client.chat.completions.create(
-        model="openai/gpt-oss-120b",
+
+    try:
+        print("🧠 Sending prompt to Groq...")
+        response = client.chat.completions.create(
+             model="openai/gpt-oss-120b",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.9,
         top_p=0.95
-    )
-    return response.choices[0].message.content.strip()
+        )
+        print("✅ Groq response received")
+        return response.choices[0].message.content.strip()
+
+    except Exception as e:
+        print("❌ GROQ ERROR:", repr(e))
+        raise
+
 
 
 def generate_question(role, experience, difficulty, tech_skills=None, target_company=None, interview_type="technical"):
@@ -134,28 +144,40 @@ Number them as:
 
 def evaluate_answer(question, answer):
     prompt = f"""
-    Interview Question:
-    {question}
+You are a strict technical interviewer.   
+Interview Question:
+{question}
 
-    Candidate Answer:
-    {answer}
+Candidate Answer:
+{answer}
 
-    Evaluate on:
-    - Clarity
-    - Technical accuracy
-    - Completeness
+Evaluate on:
+- Clarity
+- Technical accuracy
+- Completeness
+-BE strict,do not be generous
 
-    Respond in this format:
-    Score: 0-10,
-    Feedback: <short feedback>
-    """
+Respond EXACTLY in this format:
+Score: <number between 0 and 10>
+Feedback: <short feedback only>
+"""
 
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": prompt}]
     )
 
-    return response.choices[0].message.content.strip()
+    ai_text = response.choices[0].message.content.strip()
+
+    # ---- Extract Score ----
+    score_match = re.search(r"Score:\s*(\d+)", ai_text)
+    score = int(score_match.group(1)) if score_match else 0
+
+    # ---- Extract Feedback ----
+    feedback_match = re.search(r"Feedback:\s*(.*)", ai_text, re.DOTALL)
+    feedback = feedback_match.group(1).strip() if feedback_match else ai_text
+
+    return score, feedback
 
 
 

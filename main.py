@@ -3,16 +3,47 @@ from models.schemas import InterviewSetup, EvaluationRequest, InterviewResult
 from services.groq_service import generate_question, evaluate_answer
 from services.speech_service import speech_to_text
 from utils.scoring import calculate_percentage, grade_from_percentage
+
+
+from fastapi.middleware.cors import CORSMiddleware
+from routes import interview
+import re
+
+
 import uuid
 
+
 app = FastAPI(title="AI Interview Backend")
+app.include_router(interview.router)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # React app
+    allow_credentials=True,
+    allow_methods=["*"],  # GET, POST, OPTIONS, etc.
+    allow_headers=["*"],
+)
+
+
+
 
 scores_store = [] 
+
+def extract_score_from_text(text: str) -> int:
+    """
+    Extracts score like '8/10' from Groq feedback
+    """
+    match = re.search(r'(\d+)\s*/\s*10', text)
+    if match:
+        return int(match.group(1))
+    return 0
+
 question_store = {}  # temporarily holds 3 questions
 current_index = {}    # tracks which question we are on
 
+
 @app.post("/interview/setup")
 def interview_setup(data: InterviewSetup):
+    print("insideeee")
     try:
         questions = generate_question(
             role=data.role,
@@ -41,7 +72,9 @@ def interview_setup(data: InterviewSetup):
             "question": question_store[session_id][0]
         }
 
+
     except Exception as e:
+        print("ufffff")
         print("ERROR:", str(e))
         return {"error": str(e)}
 
@@ -70,20 +103,24 @@ async def transcribe_audio(audio: UploadFile = File(...)):
 
 @app.post("/interview/evaluate")
 def evaluate(data: EvaluationRequest):
-    result = evaluate_answer(data.question, data.answer)
+    if not data.answer or not data.answer.strip():
+        return {
+            "score": 0,
+            "feedback": "No answer provided."
+        }
+    
+    score, feedback = evaluate_answer(data.question, data.answer)
+    return {
+        "score": score,
+        "feedback": feedback
+    }
 
-    print("TYPE OF RESULT:", type(result))
-    print("RESULT VALUE:", result)
-
-    return result
 
 
 @app.get("/interview/result")
 def final_result():
     if not scores_store:
         return {
-            "message": "No evaluations completed yet",
-            "total_questions": 0,
             "percentage": 0,
             "grade": "N/A"
         }
@@ -92,8 +129,6 @@ def final_result():
     grade = grade_from_percentage(percentage)
 
     return {
-        "total_questions": len(scores_store),
-        "total_score": sum(scores_store),
         "percentage": percentage,
         "grade": grade
     }
